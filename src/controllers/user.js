@@ -1,24 +1,10 @@
+import UserModel from '../models/user.js'
+
 const GET = async (req, res) => {
 	try {
 		const { userId } = req.params
 
-		const users = await req.fetch(`
-			SELECT 
-				user_id,
-				first_name,
-				last_name,
-				phone_number,
-				email,
-				status
-			FROM 
-				users
-			WHERE
-				CASE
-					WHEN $1 > 0 THEN user_id = $1
-					ELSE true
-				END
-			ORDER BY user_id
-		`, userId)
+		const users = await req.fetch(UserModel.GET, userId)
 
 		if(users.message) throw new Error(users.message)
 
@@ -41,14 +27,7 @@ const POST = async (req, res) => {
 		if (!email) throw new Error("email kiritilmagan!")
 		if (!phoneNumber) throw new Error("phoneNumber kiritilmagan!")
 
-		const newUser = await req.fetch(`
-			INSERT INTO 
-				users(first_name, last_name, email, phone_number)
-			VALUES
-				($1, $2, $3, $4)
-			RETURNING 
-				user_id, first_name, last_name, email, phone_number
-		`, firstName, lastName, email, phoneNumber)
+		const newUser = await req.fetch(UserModel.POST, firstName, lastName, email, phoneNumber)
 
 		if(newUser.message) throw new Error(newUser.message)
 
@@ -80,39 +59,7 @@ const PUT = async (req, res) => {
 		if(!firstName && !lastName && !email && !phoneNumber && !status)
 			throw new Error("Tahrirlash uchun qiymat kiriting!")
 
-		const changeUser = await req.fetch(`
-			UPDATE 
-				users 
-			SET
-				first_name = 
-					CASE
-						WHEN LENGTH($2) > 0 THEN $2
-						ELSE first_name
-					END,
-				last_name =
-					CASE
-						WHEN LENGTH($3) > 0 THEN $3
-						ELSE last_name
-					END,
-				email =
-					CASE
-						WHEN LENGTH($4) > 0 THEN $4
-						ELSE email
-					END,
-				phone_number =
-					CASE
-						WHEN LENGTH($5) > 0 THEN $5
-						ELSE phone_number
-					END,
-				status =
-					CASE
-						WHEN LENGTH($6) > 0 THEN $6
-						ELSE status
-					END
-			WHERE 
-				user_id = $1
-			RETURNING user_id, first_name, last_name, email, phone_number, status
-		`, userId, firstName, lastName, email, phoneNumber, status)
+		const changeUser = await req.fetch(UserModel.PUT, userId, firstName, lastName, email, phoneNumber, status)
 
 		if(changeUser.message) throw new Error(changeUser.message)
 
@@ -135,13 +82,7 @@ const DELETE = async (req, res) => {
 
 		if(!userId) throw new Error("Parametrdan userId kiritilmadi!")
 
-		const deleteUser = await req.fetch(`
-			DELETE FROM 
-				users 
-			WHERE 
-				user_id = $1
-			RETURNING user_id, first_name, last_name, email, phone_number, status
-		`, userId)
+		const deleteUser = await req.fetch(UserModel.DELETE, userId)
 
 		if(deleteUser.message) throw new Error(deleteUser.message)
 		if(!deleteUser.length) throw new Error("Bunday id user topilmadi!")

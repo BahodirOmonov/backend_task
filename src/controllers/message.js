@@ -1,19 +1,10 @@
+import MessageModel from '../models/message.js'
+
 const GET = async (req, res) => {
 	try {
 		const { messageId } = req.params
 
-		const messages = await req.fetch(`
-			SELECT 
-				*
-			FROM 
-				messages
-			WHERE
-				CASE
-					WHEN $1 > 0 THEN message_id = $1
-					ELSE true
-				END
-			ORDER BY message_id
-		`, messageId)
+		const messages = await req.fetch(MessageModel.GET, messageId)
 
 		if(messages.message) throw new Error(messages.message)
 
@@ -34,13 +25,7 @@ const POST = async (req, res) => {
 		if (!userId) throw new Error("userId kiritilmagan!")
 		if (!messageBody) throw new Error("messageBody kiritilmagan!")
 
-		const newMessage = await req.fetch(`
-			INSERT INTO 
-				messages(user_id, message_body)
-			VALUES
-				($1, $2)
-			RETURNING *
-		`, userId, messageBody)
+		const newMessage = await req.fetch(MessageModel.POST, userId, messageBody)
 
 		if(newMessage.message) throw new Error(newMessage.message)
 
@@ -81,20 +66,7 @@ const PUT = async (req, res) => {
 		if(!messageBody)
 			throw new Error("Tahrirlash uchun qiymat kiriting!")
 
-		const changeMessage = await req.fetch(`
-			UPDATE 
-				messages 
-			SET
-				message_body = 
-					CASE
-						WHEN LENGTH($2) > 0 THEN $2
-						ELSE message_body
-					END,
-				message_updated_at = current_timestamp
-			WHERE 
-				message_id = $1
-			RETURNING *
-		`, messageId, messageBody)
+		const changeMessage = await req.fetch(MessageModel.PUT, messageId, messageBody)
 
 		if(changeMessage.message) throw new Error(changeMessage.message)
 
@@ -117,13 +89,7 @@ const DELETE = async (req, res) => {
 
 		if(!messageId) throw new Error("Parametrdan messageId kiritilmadi!")
 
-		const deleteMessage = await req.fetch(`
-			DELETE FROM 
-				messages 
-			WHERE 
-				message_id = $1
-			RETURNING *
-		`, messageId)
+		const deleteMessage = await req.fetch(MessageModel.DELETE, messageId)
 
 		if(deleteMessage.message) throw new Error(deleteMessage.message)
 		if(!deleteMessage.length) throw new Error("Bunday id message topilmadi!")
