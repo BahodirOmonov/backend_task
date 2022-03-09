@@ -1,4 +1,5 @@
 import UserModel from '../models/user.js'
+import checkValue from '../util/validate.js'
 
 const GET = async (req, res) => {
 	try {
@@ -15,7 +16,6 @@ const GET = async (req, res) => {
 		}
 
 		const users = await req.fetch(UserModel.GET)
-
 		if(users.message) throw new Error(users.message)
 
 		return res.status(200).json(users)
@@ -134,40 +134,6 @@ const DELETE = async (req, res) => {
 			status: 400,
 			message: error.message
 		})
-	}
-}
-
-function checkValue(value, type) {
-	try {
-		if (type == 'id') {
-			if(!value) throw new Error("Parametrdan userId kiritilmadi!")
-			if(+value != value) throw new Error("Parametrdan no'to'g'ri qiymat kiritilgan!")
-		}
-
-		else if (type == 'firstName') {
-			if (!value) throw new Error("firstName kiritilmagan!")
-			if (value.length < 3 || value.length > 50) throw new Error("firstName uzunligi 3 va 50 orasida bo'lishi kerak!") 
-		}
-
-		else if (type == 'email') {
-			if (!value) throw new Error("email kiritilmagan!")
-			if (!(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/).test(value))
-				throw new Error("emailni to'g'ri kiriting!")
-		}
-
-		else if (type == 'phoneNumber') {
-			if (!value) throw new Error("phoneNumber kiritilmagan!")
-			if (!( /^(9[012345789]|6[125679]|7[01234569])[0-9]{7}$/).test(value))
-				throw new Error("phoneNumberni to'g'ri kiriting!")
-		}
-
-		else if (type == 'status') {
-			if (!['client', 'lead'].includes(value)) throw new Error("Status faqat lead yoki client bo'lishi mumkin!")
-		}
-
-		return {}
-	} catch (error) {
-		return error
 	}
 }
 

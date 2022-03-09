@@ -1,16 +1,9 @@
-const GET = `
-	SELECT 
-		*
-	FROM 
-		messages
-	WHERE
-		CASE
-			WHEN $1 > 0 THEN message_id = $1
-			ELSE true
-		END
-	ORDER BY 
-		message_id
-`
+const GET = ` SELECT * FROM messages ORDER BY message_id `
+
+const GET_ONE = ` SELECT * FROM messages WHERE message_id = $1 `
+
+const GET_COUNT = ` SELECT COUNT(message_id) FROM messages WHERE user_id = $1 `
+
 
 const POST = `
 	INSERT INTO 
@@ -46,6 +39,8 @@ const DELETE = `
 
 export default {
 	GET,
+	GET_ONE,
+	GET_COUNT,
 	POST,
 	PUT,
 	DELETE

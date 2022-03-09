@@ -11,7 +11,6 @@ const pool = new pg.Pool({
 export default async function fetching (req, res, next) {
 	const client = await pool.connect()
 	try {
-
 		req.fetch = async (query, ...arr) => {
 			const { rows } = await client.query(query, arr.length ? arr: null)
 			return rows

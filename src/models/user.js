@@ -45,6 +45,8 @@ const PUT = `
 	RETURNING *
 `
 
+const PUT_STATUS = ` UPDATE users SET status = $2 WHERE user_id = $1 `
+
 const DELETE = `
 	DELETE FROM 
 		users 
@@ -59,5 +61,6 @@ export default {
 	GET,
 	POST,
 	PUT,
+	PUT_STATUS,
 	DELETE
 }

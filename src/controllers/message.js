@@ -1,11 +1,22 @@
 import MessageModel from '../models/message.js'
+import UserModel from '../models/user.js'
+import checkValue from '../util/validate.js'
 
 const GET = async (req, res) => {
 	try {
 		const { messageId } = req.params
 
-		const messages = await req.fetch(MessageModel.GET, messageId)
+		if (messageId) {
+			const checkId = checkValue(messageId, 'id')
+			if (checkId.message) throw new Error(checkId.message)
 
+			const findMessage = await req.fetchOne(MessageModel.GET_ONE, messageId)
+			if (!findMessage) throw new Error("Bunday id'li message mavjud emas!")
+
+			return res.status(200).json(findMessage)
+		}
+
+		const messages = await req.fetch(MessageModel.GET)
 		if(messages.message) throw new Error(messages.message)
 
 		return res.status(200).json(messages)
@@ -22,25 +33,28 @@ const POST = async (req, res) => {
 	try {		
 		const { userId, messageBody } = req.body
 
-		if (!userId) throw new Error("userId kiritilmagan!")
-		if (!messageBody) throw new Error("messageBody kiritilmagan!")
+		const checkId = checkValue(userId, 'id')
+		if (checkId.message) throw new Error(checkId.message)
+		
+		const checkMessage = checkValue(messageBody, 'message')
+		if (checkMessage.message) throw new Error(checkMessage.message)
 
-		const newMessage = await req.fetch(MessageModel.POST, userId, messageBody)
+		const findUser = await req.fetchOne(UserModel.GET_ONE, userId)
+
+		if(!findUser) throw new Error("Bunday id'li user mavjud emas!")
+
+		const newMessage = await req.fetchOne(MessageModel.POST, userId, messageBody)
 
 		if(newMessage.message) throw new Error(newMessage.message)
 
-		const [findUser] = await req.fetch("SELECT * FROM users WHERE user_id = $1", userId)
-
 		if (findUser.status == 'lead') {
-			await req.fetch(`
-				UPDATE users SET status = 'client' WHERE user_id = $1
- 			`, userId)
+			await req.fetchOne(UserModel.PUT_STATUS, userId, 'client')
 		}
 
 		return res.status(201).json({
 			status: 201,
 			message: "Message muvaffaqiyatli yuborildi!",
-			data: newMessage[0]
+			data: newMessage
 		})
 
 	} catch (error) {
@@ -55,16 +69,16 @@ const PUT = async (req, res) => {
 	try {
 		const { messageId } = req.params
 
-		if(!messageId) throw new Error("Parametrdan messageId kiritilmagan!")
+		const checkId = checkValue(messageId, 'id')
+		if (checkId.message) throw new Error(checkId.message)
 
-		const [findMessage] = await req.fetch(`SELECT * FROM messages WHERE message_id = $1`, messageId)
-		
+		const findMessage = await req.fetchOne(MessageModel.GET_ONE, messageId)	
 		if(!findMessage) throw new Error("Bunday id'li message mavjud emas!")
 
 		const { messageBody } = req.body
 
-		if(!messageBody)
-			throw new Error("Tahrirlash uchun qiymat kiriting!")
+		const checkMessage = checkValue(messageBody, 'message')
+		if (checkMessage.message) throw new Error(checkMessage.message)
 
 		const changeMessage = await req.fetch(MessageModel.PUT, messageId, messageBody)
 
@@ -73,7 +87,7 @@ const PUT = async (req, res) => {
 		return res.status(200).json({
 			status: 200,
 			message: 'Message muvaffaqiyatli o\'zgartirildi!',
-			data: changeMessage[0]
+			data: changeMessage
 		})
 	} catch(error) {
 		res.status(400).json({
@@ -87,17 +101,24 @@ const DELETE = async (req, res) => {
 	try {
 		const { messageId } = req.params
 
-		if(!messageId) throw new Error("Parametrdan messageId kiritilmadi!")
+		const checkId = checkValue(messageId, 'id')
+		if (checkId.message) throw new Error(checkId.message)
 
-		const deleteMessage = await req.fetch(MessageModel.DELETE, messageId)
+		const deleteMessage = await req.fetchOne(MessageModel.DELETE, messageId)
 
+		if(!deleteMessage) throw new Error("Bunday id'li message topilmadi!")
 		if(deleteMessage.message) throw new Error(deleteMessage.message)
-		if(!deleteMessage.length) throw new Error("Bunday id message topilmadi!")
+
+		const findUserCount = await req.fetchOne(MessageModel.GET_COUNT, deleteMessage.user_id)
+
+		if (findUserCount.count == 0) {
+			await req.fetchOne(UserModel.PUT_STATUS, deleteMessage.user_id, 'lead')
+		}
 
 		return res.status(200).json({
 			status: 200,
 			message: "Message muvaffaqiyatli o'chirildi!",
-			data: deleteMessage[0]
+			data: deleteMessage
 		})
 
 	} catch(error) {
