@@ -1,11 +1,11 @@
 import pg from 'pg'
 
 const pool = new pg.Pool({
-	host: 'localhost',
-	user: 'postgres',
-	password: '7777',
-	port: '5432',
-	database: 'abutech'
+	host: process.env.PG_HOST,
+	user: process.env.PG_USER,
+	password: process.env.PG_PASSWORD,
+	port: process.env.PG_PORT,
+	database: process.env.PG_DATABASE
 })
 
 export default function fetching (req, res, next) {

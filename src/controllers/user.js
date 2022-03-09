@@ -8,7 +8,8 @@ const GET = async (req, res) => {
 				first_name,
 				last_name,
 				phone_number,
-				email
+				email,
+				status
 			FROM 
 				users
 			WHERE
