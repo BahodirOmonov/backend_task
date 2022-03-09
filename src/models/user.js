@@ -1,15 +1,6 @@
-const GET = `
-	SELECT 
-		*
-	FROM 
-		users
-	WHERE
-		CASE
-			WHEN $1 > 0 THEN user_id = $1
-			ELSE true
-		END
-	ORDER BY user_id
-`
+const GET_ONE = ` SELECT * FROM users WHERE user_id = $1 `
+
+const GET = ` SELECT * FROM users ORDER BY user_id `
 
 const POST = `
 	INSERT INTO 
@@ -64,6 +55,7 @@ const DELETE = `
 
 
 export default {
+	GET_ONE,
 	GET,
 	POST,
 	PUT,
